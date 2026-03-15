@@ -1,0 +1,60 @@
+# Systemd service file for running Polymarket bot on VPS
+# Installation instructions at bottom of file
+
+[Unit]
+Description=Polymarket Sniper Bot
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/polymarket-sniper
+Environment="PATH=/home/YOUR_USERNAME/polymarket-sniper/venv/bin:/usr/bin"
+ExecStart=/home/YOUR_USERNAME/polymarket-sniper/venv/bin/python run.py
+
+# Auto-restart on failure
+Restart=always
+RestartSec=10
+StartLimitInterval=3600
+StartLimitBurst=10
+
+# Logging
+StandardOutput=append:/home/YOUR_USERNAME/polymarket-sniper/logs/systemd.log
+StandardError=append:/home/YOUR_USERNAME/polymarket-sniper/logs/systemd.log
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+# INSTALLATION INSTRUCTIONS:
+# 
+# 1. Edit this file and replace YOUR_USERNAME with your actual username
+# 
+# 2. Copy to systemd directory:
+#    sudo cp polymarket-bot.service /etc/systemd/system/
+# 
+# 3. Reload systemd:
+#    sudo systemctl daemon-reload
+# 
+# 4. Enable service to start on boot:
+#    sudo systemctl enable polymarket-bot
+# 
+# 5. Start the service:
+#    sudo systemctl start polymarket-bot
+# 
+# 6. Check status:
+#    sudo systemctl status polymarket-bot
+# 
+# 7. View logs:
+#    sudo journalctl -u polymarket-bot -f
+#    OR
+#    tail -f ~/polymarket-sniper/logs/systemd.log
+# 
+# 8. Stop service:
+#    sudo systemctl stop polymarket-bot
+# 
+# 9. Disable auto-start:
+#    sudo systemctl disable polymarket-bot

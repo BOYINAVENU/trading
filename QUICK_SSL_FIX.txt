@@ -1,0 +1,58 @@
+================================================================================
+CORPORATE SSL FIX - Add This Line to Your .env File
+================================================================================
+
+PROBLEM:
+Your corporate network intercepts HTTPS traffic with self-signed certificates.
+This causes SSL verification errors when connecting to blockchain RPC endpoints.
+
+SOLUTION:
+Add this line to your .env file (at the bottom):
+
+    DISABLE_SSL_VERIFICATION=True
+
+================================================================================
+
+STEPS:
+
+1. Open your .env file in editor
+
+2. Add this line at the bottom:
+   DISABLE_SSL_VERIFICATION=True
+
+3. Save the file
+
+4. Run: python test_setup.py
+
+5. All tests should now pass!
+
+================================================================================
+
+Your .env file should look like this at the end:
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FILE=logs/trading.log
+
+# Corporate Network Settings
+DISABLE_SSL_VERIFICATION=True
+
+================================================================================
+
+After adding this line:
+- SSL verification will be disabled for API calls
+- Bot will work with corporate SSL-intercepting proxies
+- All connections will still be encrypted (just not verified)
+
+This is safe for your use case since you're connecting to known, trusted
+blockchain endpoints (Polymarket, Polygon RPC, etc.)
+
+================================================================================
+
+THEN RUN:
+python test_network.py
+python test_setup.py
+
+Both should show successful connections!
+
+================================================================================

@@ -1,0 +1,78 @@
+================================================================================
+POLYMARKET SNIPER BOT - INSTALLATION INSTRUCTIONS
+================================================================================
+
+QUICK START (Choose ONE method):
+
+METHOD 1: Corporate Network (RECOMMENDED FOR YOUR SETUP)
+---------------------------------------------------------
+Run this command:
+    setup_corporate.bat
+
+This handles:
+- SSL certificate issues (corporate proxy)
+- Virtual environment creation
+- All dependencies
+
+
+METHOD 2: Fix Permission Error First
+---------------------------------------------------------
+If you got "Permission denied" error:
+
+1. Run:    fix_permissions.bat
+2. Then:   setup_corporate.bat
+
+
+METHOD 3: Install Without Virtual Environment
+---------------------------------------------------------
+If venv creation keeps failing:
+
+Run:    setup_no_venv.bat
+
+Warning: Installs to system Python (not isolated)
+
+
+METHOD 4: Manual Installation
+---------------------------------------------------------
+Open Command Prompt AS ADMINISTRATOR, then:
+
+cd C:\Users\AL55582\CascadeProjects\polymarket-sniper
+
+python -m venv venv
+venv\Scripts\activate
+
+pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r requirements.txt
+
+copy .env.example .env
+mkdir data
+mkdir logs
+
+================================================================================
+
+AFTER INSTALLATION:
+
+1. Edit .env file:
+   - Add your Ethereum private key
+   - Configure settings (defaults are good)
+
+2. Test setup:
+   python test_setup.py
+
+3. Run bot:
+   python run.py
+
+================================================================================
+
+TROUBLESHOOTING:
+
+Permission errors?           → fix_permissions.bat
+SSL certificate errors?      → setup_corporate.bat
+Installation still failing?  → See TROUBLESHOOTING.md
+
+================================================================================
+
+YOUR CURRENT ISSUE: Permission denied creating venv
+
+SOLUTION: Run fix_permissions.bat then setup_corporate.bat
+
+================================================================================
