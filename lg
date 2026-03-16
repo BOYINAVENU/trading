@@ -1,0 +1,164 @@
+"""Logging system for memecoin sniper bot"""
+import logging
+import os
+from datetime import datetime
+from pathlib import Path
+from colorama import Fore, Style, init
+
+init(autoreset=True)
+
+class BotLogger:
+    """Centralized logging for the bot"""
+    
+    def __init__(self, config):
+        self.config = config
+        self.logger = self._setup_logger()
+        self.trades = []
+        
+    def _setup_logger(self):
+        """Setup logger with file and console handlers"""
+        logger = logging.getLogger('MemecoinSniper')
+        logger.setLevel(getattr(logging, self.config.log_level))
+        
+        # Remove existing handlers
+        logger.handlers = []
+        
+        # Console handler with colors
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_format = logging.Formatter('%(message)s')
+        console_handler.setFormatter(console_format)
+        logger.addHandler(console_handler)
+        
+        # File handler
+        if self.config.log_to_file:
+            log_dir = Path(self.config.log_folder)
+            log_dir.mkdir(exist_ok=True)
+            
+            log_file = log_dir / f"bot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(logging.DEBUG)
+            file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(file_format)
+            logger.addHandler(file_handler)
+        
+        return logger
+    
+    def info(self, message):
+        """Log info message"""
+        self.logger.info(f"{Fore.CYAN}{message}{Style.RESET_ALL}")
+    
+    def success(self, message):
+        """Log success message"""
+        self.logger.info(f"{Fore.GREEN}[OK] {message}{Style.RESET_ALL}")
+    
+    def warning(self, message):
+        """Log warning message"""
+        self.logger.warning(f"{Fore.YELLOW}[!] {message}{Style.RESET_ALL}")
+    
+    def error(self, message):
+        """Log error message"""
+        self.logger.error(f"{Fore.RED}[X] {message}{Style.RESET_ALL}")
+    
+    def trade(self, message):
+        """Log trade message"""
+        self.logger.info(f"{Fore.MAGENTA}[$] {message}{Style.RESET_ALL}")
+    
+    def opportunity(self, message):
+        """Log opportunity found"""
+        self.logger.info(f"{Fore.GREEN}[**] {message}{Style.RESET_ALL}")
+    
+    def debug(self, message):
+        """Log debug message"""
+        self.logger.debug(message)
+    
+    def header(self, message):
+        """Log section header"""
+        self.logger.info(f"\n{Fore.CYAN}{'='*80}")
+        self.logger.info(f"{Fore.CYAN}{message}")
+        self.logger.info(f"{Fore.CYAN}{'='*80}{Style.RESET_ALL}")
+    
+    def log_token_found(self, token_data):
+        """Log newly discovered token"""
+        self.info(f"\n[SCAN] NEW TOKEN DETECTED")
+        self.info(f"   Address: {token_data.get('address', 'N/A')}")
+        self.info(f"   Symbol: {token_data.get('symbol', 'N/A')}")
+        self.info(f"   Liquidity: ${token_data.get('liquidity_usd', 0):,.2f}")
+        self.info(f"   Age: {token_data.get('age_seconds', 0)}s")
+    
+    def log_score(self, token_address, score, reasons):
+        """Log token scoring"""
+        color = Fore.GREEN if score >= 70 else Fore.YELLOW if score >= 50 else Fore.RED
+        self.logger.info(f"{color}[SCORE] {score}/100{Style.RESET_ALL}")
+        for reason in reasons:
+            self.info(f"   - {reason}")
+    
+    def log_trade_execution(self, trade_data):
+        """Log trade execution"""
+        self.trade(f"EXECUTING {'BUY' if trade_data['side'] == 'buy' else 'SELL'}")
+        self.trade(f"   Token: {trade_data['token_symbol']}")
+        self.trade(f"   Amount: {trade_data['amount_matic']:.4f} MATIC")
+        self.trade(f"   Expected: {trade_data['expected_tokens']:.2f} tokens")
+        if self.config.is_paper_trading():
+            self.warning(f"   MODE: PAPER TRADING (not executed)")
+    
+    def log_trade_result(self, result):
+        """Log trade result"""
+        if result['success']:
+            self.success(f"Trade successful!")
+            self.success(f"   TX Hash: {result['tx_hash']}")
+            self.success(f"   Gas Used: {result['gas_used']}")
+        else:
+            self.error(f"Trade failed: {result['error']}")
+    
+    def log_profit(self, position, current_price):
+        """Log current profit/loss"""
+        pnl_percent = ((current_price - position['entry_price']) / position['entry_price']) * 100
+        color = Fore.GREEN if pnl_percent > 0 else Fore.RED
+        self.logger.info(f"{color}[P&L] {pnl_percent:+.2f}% | Current: ${current_price:.6f} | Entry: ${position['entry_price']:.6f}{Style.RESET_ALL}")
+    
+    def log_position_closed(self, position, exit_price, reason):
+        """Log position close"""
+        pnl_percent = ((exit_price - position['entry_price']) / position['entry_price']) * 100
+        pnl_matic = position['amount_matic'] * (pnl_percent / 100)
+        
+        color = Fore.GREEN if pnl_percent > 0 else Fore.RED
+        self.logger.info(f"\n{color}{'='*80}")
+        self.logger.info(f"{color}POSITION CLOSED: {reason}")
+        self.logger.info(f"{color}{'='*80}")
+        self.logger.info(f"{color}   Token: {position['token_symbol']}")
+        self.logger.info(f"{color}   Entry: ${position['entry_price']:.6f}")
+        self.logger.info(f"{color}   Exit: ${exit_price:.6f}")
+        self.logger.info(f"{color}   P&L: {pnl_percent:+.2f}% ({pnl_matic:+.4f} MATIC)")
+        self.logger.info(f"{color}   Hold Time: {position.get('hold_time_minutes', 0):.1f} min")
+        self.logger.info(f"{color}{'='*80}{Style.RESET_ALL}\n")
+        
+        # Record trade
+        self.trades.append({
+            'timestamp': datetime.now(),
+            'token': position['token_symbol'],
+            'entry_price': position['entry_price'],
+            'exit_price': exit_price,
+            'pnl_percent': pnl_percent,
+            'pnl_matic': pnl_matic,
+            'reason': reason
+        })
+    
+    def log_daily_summary(self):
+        """Log daily trading summary"""
+        if not self.trades:
+            self.info("\n[SUMMARY] No trades today")
+            return
+        
+        total_pnl = sum(t['pnl_matic'] for t in self.trades)
+        wins = sum(1 for t in self.trades if t['pnl_percent'] > 0)
+        losses = len(self.trades) - wins
+        win_rate = (wins / len(self.trades)) * 100 if self.trades else 0
+        
+        self.header("DAILY SUMMARY")
+        self.info(f"   Total Trades: {len(self.trades)}")
+        self.info(f"   Wins: {wins} | Losses: {losses}")
+        self.info(f"   Win Rate: {win_rate:.1f}%")
+        color = Fore.GREEN if total_pnl > 0 else Fore.RED
+        self.logger.info(f"{color}   Total P&L: {total_pnl:+.4f} MATIC{Style.RESET_ALL}")
+        self.info("")
