@@ -1,0 +1,281 @@
+"""Main memecoin sniper bot - orchestrates all components"""
+import asyncio
+from web3 import Web3
+import signal
+import sys
+from datetime import datetime
+import time
+
+from config_loader import Config
+from logger import BotLogger
+from token_scanner import TokenScanner
+from safety_checker import SafetyChecker
+from token_scorer import TokenScorer
+from trading_engine import TradingEngine
+from position_manager import PositionManager
+
+class MemecoinSniperBot:
+    """Main bot controller"""
+    
+    def __init__(self):
+        # Load configuration
+        self.config = Config()
+        
+        # Setup logger
+        self.logger = BotLogger(self.config)
+        
+        # Setup Web3
+        self.w3 = Web3(Web3.HTTPProvider(self.config.rpc_url))
+        
+        # Verify connection
+        if not self.w3.is_connected():
+            self.logger.error("Cannot connect to Polygon RPC")
+            sys.exit(1)
+        
+        # Initialize components
+        self.scanner = TokenScanner(self.config, self.logger, self.w3)
+        self.safety_checker = SafetyChecker(self.config, self.logger, self.w3)
+        self.scorer = TokenScorer(self.config, self.logger, self.w3, self.scanner)
+        self.trading_engine = TradingEngine(self.config, self.logger, self.w3)
+        self.position_manager = PositionManager(self.config, self.logger)
+        
+        # Bot state
+        self.running = False
+        self.scan_count = 0
+    
+    async def initialize(self):
+        """Initialize bot and verify setup"""
+        self.logger.header("MEMECOIN SNIPER BOT - INITIALIZING")
+        
+        # Check wallet balance
+        balance = self.trading_engine.get_wallet_balance()
+        self.logger.info(f"Wallet: {self.config.wallet_address[:8]}...{self.config.wallet_address[-6:]}")
+        self.logger.info(f"Balance: {balance:.4f} MATIC")
+        
+        if balance < 0.01:
+            self.logger.error("Insufficient balance - need at least 0.01 MATIC")
+            return False
+        
+        # Show configuration
+        self.logger.info(f"\nMode: {self.config.trading_mode.upper()}")
+        if self.config.is_paper_trading():
+            self.logger.warning("Paper trading - no real transactions")
+        else:
+            self.logger.warning("LIVE TRADING - real money at risk!")
+        
+        self.logger.info(f"\nSettings:")
+        self.logger.info(f"   Position Size: {self.config.position_size_percent}% per trade")
+        self.logger.info(f"   Min Score: {self.config.min_score_threshold}/100")
+        self.logger.info(f"   Scan Interval: {self.config.scan_interval_seconds}s")
+        self.logger.info(f"   Min Liquidity: ${self.config.min_liquidity_usd:,}")
+        self.logger.info(f"   Max Slippage: {self.config.max_slippage_percent}%")
+        
+        self.logger.info(f"\nProfit Targets:")
+        self.logger.info(f"   3x: Sell {self.config.take_profit_3x}%")
+        self.logger.info(f"   5x: Sell {self.config.take_profit_5x}%")
+        self.logger.info(f"   10x: Sell {self.config.take_profit_10x}%")
+        self.logger.info(f"   Trailing Stop: {self.config.trailing_stop_percent}%")
+        
+        self.logger.success("\nBot initialized successfully!")
+        return True
+    
+    async def run(self):
+        """Main bot loop"""
+        self.running = True
+        
+        # Setup graceful shutdown
+        signal.signal(signal.SIGINT, lambda s, f: asyncio.create_task(self.shutdown()))
+        signal.signal(signal.SIGTERM, lambda s, f: asyncio.create_task(self.shutdown()))
+        
+        self.logger.header("BOT STARTED - SCANNING FOR OPPORTUNITIES")
+        
+        while self.running:
+            try:
+                self.scan_count += 1
+                scan_start = time.time()
+                
+                self.logger.info(f"\n{'-'*60}")
+                self.logger.info(f"Scan #{self.scan_count} - {datetime.now().strftime('%H:%M:%S')}")
+                self.logger.info(f"{'-'*60}")
+                
+                # Step 1: Scan for new tokens
+                new_tokens = await self.scanner.scan_for_new_tokens()
+                self.logger.info(f"Found {len(new_tokens)} new token(s)")
+                
+                # Step 2: Analyze each token
+                for token in new_tokens:
+                    await self.analyze_and_trade(token)
+                
+                # Step 3: Monitor open positions
+                await self.monitor_positions()
+                
+                # Step 4: Log summary
+                scan_duration = time.time() - scan_start
+                self.logger.debug(f"Scan completed in {scan_duration:.2f}s")
+                
+                # Wait for next scan
+                await asyncio.sleep(self.config.scan_interval_seconds)
+                
+            except Exception as e:
+                self.logger.error(f"Error in main loop: {e}")
+                await asyncio.sleep(5)
+    
+    async def analyze_and_trade(self, token_data):
+        """Analyze a token and execute trade if conditions met"""
+        try:
+            token_symbol = token_data.get('symbol', 'UNKNOWN')
+            
+            # Skip if we already have position
+            if self.position_manager.has_position(token_data['address']):
+                self.logger.debug(f"Already have position in {token_symbol}")
+                return
+            
+            # Safety check
+            self.logger.info(f"\n[ANALYZE] {token_symbol}")
+            safety_result = await self.safety_checker.check_token_safety(token_data)
+            
+            if not safety_result['safe']:
+                self.logger.warning(f"[FAIL] Safety check failed: {token_symbol}")
+                for issue in safety_result['issues']:
+                    self.logger.warning(f"   {issue}")
+                return
+            
+            # Score token
+            score_result = await self.scorer.score_token(token_data, safety_result)
+            
+            self.logger.log_score(
+                token_data['address'],
+                score_result['total_score'],
+                score_result['reasons']
+            )
+            
+            # Check if tradeable
+            if not score_result['tradeable']:
+                self.logger.info(f"Score too low - skipping {token_symbol}")
+                return
+            
+            # Execute buy
+            self.logger.opportunity(f"✅ HIGH SCORE TOKEN FOUND: {token_symbol}")
+            
+            balance = self.trading_engine.get_wallet_balance()
+            buy_result = await self.trading_engine.buy_token(token_data, balance)
+            
+            if buy_result and buy_result['success']:
+                self.logger.log_trade_result(buy_result)
+                
+                # Open position
+                token_data['spent_matic'] = token_data.get('amount_matic', 
+                    balance * (self.config.position_size_percent / 100))
+                position = self.position_manager.open_position(token_data, buy_result)
+                
+                if position:
+                    self.logger.success(f"🎯 Position opened in {token_symbol}")
+            else:
+                self.logger.error(f"Trade failed for {token_symbol}")
+                if buy_result:
+                    self.logger.error(f"   Reason: {buy_result.get('error', 'Unknown')}")
+                
+        except Exception as e:
+            self.logger.error(f"Error analyzing token: {e}")
+    
+    async def monitor_positions(self):
+        """Monitor and manage open positions"""
+        positions = self.position_manager.get_all_positions()
+        
+        if not positions:
+            return
+        
+        self.logger.info(f"\n📊 Monitoring {len(positions)} position(s)")
+        
+        for position in positions:
+            try:
+                # Get current price (simplified - in production use live price feed)
+                # For now, we'll use a placeholder
+                current_price = position['entry_price'] * 1.1  # Simulated price
+                
+                # Log current P&L
+                self.logger.log_profit(position, current_price)
+                
+                # Check for exit signals
+                action = self.position_manager.update_position(
+                    position['token_address'],
+                    current_price
+                )
+                
+                if action:
+                    if action['action'] == 'close_all':
+                        # Close entire position
+                        await self.close_position(position, current_price, action['reason'])
+                    
+                    elif action['action'] == 'partial_sell':
+                        # Take profits at targets
+                        for target, percent in action['sells']:
+                            self.logger.opportunity(f"Taking {percent}% profit at {target}")
+                            # In production, execute partial sell here
+                
+            except Exception as e:
+                self.logger.error(f"Error monitoring position: {e}")
+    
+    async def close_position(self, position, current_price, reason):
+        """Close a position"""
+        try:
+            # Add current price to position for sell
+            position['current_price'] = current_price
+            
+            # Execute sell
+            sell_result = await self.trading_engine.sell_token(position)
+            
+            if sell_result and sell_result['success']:
+                self.logger.log_trade_result(sell_result)
+                
+                # Close in position manager
+                exit_price = sell_result.get('exit_price', current_price)
+                self.position_manager.close_position(
+                    position['token_address'],
+                    exit_price,
+                    reason
+                )
+            else:
+                self.logger.error("Failed to close position")
+                
+        except Exception as e:
+            self.logger.error(f"Error closing position: {e}")
+    
+    async def shutdown(self):
+        """Graceful shutdown"""
+        self.logger.warning("\n⚠️  Shutdown signal received")
+        self.running = False
+        
+        # Log final summary
+        self.logger.log_daily_summary()
+        
+        # Log performance stats
+        stats = self.position_manager.get_performance_stats()
+        if stats['total_trades'] > 0:
+            self.logger.header("FINAL STATISTICS")
+            self.logger.info(f"Total Trades: {stats['total_trades']}")
+            self.logger.info(f"Win Rate: {stats['win_rate']:.1f}%")
+            self.logger.info(f"Avg P&L: {stats['avg_pnl']:+.2f}%")
+            self.logger.info(f"Best Trade: {stats['best_trade']:+.2f}%")
+            self.logger.info(f"Worst Trade: {stats['worst_trade']:+.2f}%")
+        
+        self.logger.success("\n👋 Bot stopped. Stay safe!")
+        sys.exit(0)
+
+async def main():
+    """Main entry point"""
+    bot = MemecoinSniperBot()
+    
+    if await bot.initialize():
+        await bot.run()
+    else:
+        sys.exit(1)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n\nBot stopped by user")
+    except Exception as e:
+        print(f"\n\nFatal error: {e}")
+        sys.exit(1)
