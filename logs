@@ -1,0 +1,161 @@
+
+(venv) C:\polymarket-sniper>python check_balance.py
+======================================================================
+WALLET BALANCE CHECK
+======================================================================
+
+📍 Wallet Address:
+   0x6ed8b17C8Ea84F5B6cfF7715CFb80B609036347e
+
+🌐 Network: Polygon (Chain ID: 137)
+   RPC: https://polygon-mainnet.g.alchemy.com/v2/jDw4YYLZ4bWSF-DtNhbb1
+   ✅ Connected!
+
+💰 MATIC Balance:
+   30.193196 MATIC
+   ✅ Sufficient for gas fees
+
+💵 USDC Balance:
+   USDC (Native):
+      Contract: 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359
+      Balance: $11.52
+      ✅ Found funds!
+   USDC.e (Bridged):
+      Contract: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+      Balance: $0.00
+      ⚠️  Empty
+
+   Total USDC: $11.52
+   ✅ Sufficient for trading (minimum: $10.0)
+
+🔍 Verify on Block Explorer:
+   https://polygonscan.com/address/0x6ed8b17C8Ea84F5B6cfF7715CFb80B609036347e
+
+   This will show all your tokens and transaction history
+
+======================================================================
+SUMMARY
+======================================================================
+✅ Wallet is ready for trading!
+   MATIC: 30.193196 (for gas)
+   USDC: $11.52 (for trading)
+======================================================================
+
+(venv) C:\polymarket-sniper>python run.py
+================================================================================
+POLYMARKET SNIPER BOT - AUTO-RESTART WRAPPER
+================================================================================
+Press Ctrl+C to stop the bot permanently
+================================================================================
+
+
+[2026-03-16 07:12:56] Starting bot...
+2026-03-16 07:12:59,802 - PolymarketBot - INFO - Initializing Polymarket CLOB client...
+2026-03-16 07:12:59,817 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:12:59,817 - PolymarketBot - INFO - Initial balance: $0.00 USDC
+2026-03-16 07:12:59,818 - PolymarketBot - INFO - Bot initialized successfully!
+2026-03-16 07:13:09,877 - PolymarketBot - INFO - ================================================================================
+2026-03-16 07:13:09,877 - PolymarketBot - INFO - POLYMARKET SNIPER BOT STARTED
+2026-03-16 07:13:09,877 - PolymarketBot - INFO - ================================================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2265' in position 84: character maps to <undefined>
+Call stack:
+  File "C:\polymarket-sniper\bot.py", line 235, in <module>
+    asyncio.run(main())
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 678, in run_until_complete
+    self.run_forever()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\windows_events.py", line 322, in run_forever
+    super().run_forever()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 645, in run_forever
+    self._run_once()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 1999, in _run_once
+    handle._run()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\polymarket-sniper\bot.py", line 227, in main
+    await bot.run()
+  File "C:\polymarket-sniper\bot.py", line 100, in run
+    self.logger.log_info(f"Strategy: High-probability sniper (\u2265{Config.MIN_PROBABILITY_THRESHOLD}%)")
+  File "C:\polymarket-sniper\logger.py", line 73, in log_info
+    self.logger.info(message)
+Message: 'Strategy: High-probability sniper (\u226598.0%)'
+Arguments: ()
+2026-03-16 07:13:09,877 - PolymarketBot - INFO - Strategy: High-probability sniper (\u226598.0%)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2264' in position 65: character maps to <undefined>
+Call stack:
+  File "C:\polymarket-sniper\bot.py", line 235, in <module>
+    asyncio.run(main())
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 678, in run_until_complete
+    self.run_forever()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\windows_events.py", line 322, in run_forever
+    super().run_forever()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 645, in run_forever
+    self._run_once()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\base_events.py", line 1999, in _run_once
+    handle._run()
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\polymarket-sniper\bot.py", line 227, in main
+    await bot.run()
+  File "C:\polymarket-sniper\bot.py", line 101, in run
+    self.logger.log_info(f"Time threshold: \u2264{Config.TIME_TO_CLOSE_THRESHOLD_MINUTES} minutes")
+  File "C:\polymarket-sniper\logger.py", line 73, in log_info
+    self.logger.info(message)
+Message: 'Time threshold: \u22645 minutes'
+Arguments: ()
+2026-03-16 07:13:09,909 - PolymarketBot - INFO - Time threshold: \u22645 minutes
+2026-03-16 07:13:09,909 - PolymarketBot - INFO - Position size: 1.0% per trade
+2026-03-16 07:13:09,909 - PolymarketBot - INFO - Daily loss limit: 5.0%
+2026-03-16 07:13:09,909 - PolymarketBot - INFO - ================================================================================
+2026-03-16 07:13:09,909 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:13:09,909 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:13:09,909 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
+2026-03-16 07:13:14,387 - PolymarketBot - WARNING - No performance data to chart
+2026-03-16 07:13:44,396 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:13:44,396 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:13:44,396 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
+2026-03-16 07:13:44,396 - PolymarketBot - WARNING - No performance data to chart
+2026-03-16 07:14:14,397 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:14:14,397 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:14:14,397 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
+2026-03-16 07:14:14,397 - PolymarketBot - WARNING - No performance data to chart
+2026-03-16 07:14:44,400 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:14:44,400 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:14:44,400 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
+2026-03-16 07:14:44,400 - PolymarketBot - WARNING - No performance data to chart
+2026-03-16 07:15:14,406 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:15:14,406 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:15:14,406 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
+2026-03-16 07:15:14,406 - PolymarketBot - WARNING - No performance data to chart
+2026-03-16 07:15:44,415 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:15:44,415 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:15:44,415 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
+2026-03-16 07:15:44,415 - PolymarketBot - WARNING - No performance data to chart
+2026-03-16 07:16:14,430 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:16:14,430 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:16:14,430 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
+2026-03-16 07:16:14,430 - PolymarketBot - WARNING - No performance data to chart
+2026-03-16 07:16:44,445 - PolymarketBot - ERROR - Error getting balance: 'ClobClient' object has no attribute 'get_balances'
+2026-03-16 07:16:44,445 - PolymarketBot - INFO - Trading halted: Balance $0.00 below minimum $10.0
+2026-03-16 07:16:44,445 - PolymarketBot - INFO - DAILY SUMMARY: PNL: $0.00 | Trades: 0 | Win Rate: 0.0% | Consecutive Losses: 0
