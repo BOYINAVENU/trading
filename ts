@@ -17,3 +17,5 @@ if w3.is_connected():
     print(f"✓ Connected! Block: {w3.eth.block_number}")
 else:
     print("✗ Connection failed")
+C:\Users\boyin\Downloads\memecoin-sniper\memecoin-sniper>python rpctest.py
+✓ Connected! Block: 84275607
